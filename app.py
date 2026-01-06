@@ -22,26 +22,26 @@ def load_specifications():
     """Load the ChatGPT Product Feed specifications"""
     specs = {
         'enable_search': {'type': 'Enum', 'values': ['true', 'false'], 'required': True, 'description': 'Controls whether the product can be surfaced in ChatGPT search results. '},
-        'enable_checkout': {'type': 'Enum', 'values': ['true', 'false'], 'required':  True, 'description': 'Allows direct purchase inside ChatGPT.'},
-        'id':  {'type': 'String', 'max_length': 100, 'required': True, 'description': 'Merchant product ID (unique)'},
+        'enable_checkout':  {'type': 'Enum', 'values': ['true', 'false'], 'required': True, 'description': 'Allows direct purchase inside ChatGPT.'},
+        'id': {'type': 'String', 'max_length': 100, 'required': True, 'description': 'Merchant product ID (unique)'},
         'gtin': {'type': 'String', 'pattern': r'^\d{8,14}$', 'required': False, 'recommended': True, 'description': 'Universal product identifier'},
         'mpn': {'type': 'String', 'max_length': 70, 'required': 'conditional', 'description': 'Manufacturer part number'},
         'title': {'type': 'String', 'max_length': 150, 'required': True, 'description': 'Product title'},
-        'description': {'type': 'String', 'max_length': 5000, 'required': True, 'description': 'Full product description'},
+        'description': {'type':  'String', 'max_length': 5000, 'required': True, 'description': 'Full product description'},
         'link': {'type': 'URL', 'required': True, 'description': 'Product detail page URL'},
         'condition': {'type': 'Enum', 'values': ['new', 'refurbished', 'used'], 'required': 'conditional', 'description': 'Condition of product'},
         'product_category': {'type': 'String', 'required': True, 'description': 'Category path'},
-        'brand': {'type': 'String', 'max_length': 70, 'required': 'conditional', 'description': 'Product brand'},
-        'material': {'type': 'String', 'max_length': 100, 'required': True, 'description': 'Primary material(s)'},
+        'brand': {'type':  'String', 'max_length': 70, 'required': 'conditional', 'description': 'Product brand'},
+        'material': {'type':  'String', 'max_length': 100, 'required': True, 'description': 'Primary material(s)'},
         'weight': {'type': 'Number', 'required': True, 'description': 'Product weight with unit'},
         'image_link': {'type': 'URL', 'required': True, 'description': 'Main product image URL'},
         'price': {'type': 'Number', 'required': True, 'description': 'Regular price with currency code'},
         'availability': {'type': 'Enum', 'values': ['in_stock', 'out_of_stock', 'preorder'], 'required': True, 'description': 'Product availability'},
         'inventory_quantity': {'type': 'Integer', 'required': True, 'description': 'Stock count'},
-        'seller_name': {'type': 'String', 'max_length':  70, 'required': True, 'description': 'Seller name'},
+        'seller_name': {'type': 'String', 'max_length': 70, 'required': True, 'description': 'Seller name'},
         'seller_url': {'type': 'URL', 'required': True, 'description': 'Seller page'},
         'return_policy': {'type': 'URL', 'required': True, 'description': 'Return policy URL'},
-        'return_window': {'type': 'Integer', 'required': True, 'description': 'Days allowed for return'},
+        'return_window': {'type': 'Integer', 'required': True, 'description':  'Days allowed for return'},
     }
     return specs
 
@@ -69,14 +69,14 @@ def validate_field(field_name, value, spec):
     
     elif spec.get('type') == 'Enum':
         if str(value).lower() not in [v.lower() for v in spec. get('values', [])]:
-            errors.append(f"'{field_name}' must be one of: {', '.join(spec['values'])}")
+            errors.append(f"'{field_name}' must be one of:  {', '.join(spec['values'])}")
     
     elif spec.get('type') == 'Integer':
         try:
             int_val = int(float(value))
             if int_val < 0:
                 errors.append(f"'{field_name}' must be non-negative")
-        except: 
+        except:
             errors.append(f"'{field_name}' must be an integer")
     
     elif spec.get('type') == 'Number':
@@ -145,7 +145,7 @@ def validate_product_feed(df, specs):
         
         if product_warnings:
             results['products_with_warnings'] += 1
-            results['all_warnings']. append({
+            results['all_warnings'].append({
                 'product_id': row.get('id', f'Row {idx}'),
                 'warnings': product_warnings
             })
@@ -200,7 +200,7 @@ def generate_schema_markup(product_data):
                 'out_of_stock': 'https://schema.org/OutOfStock',
                 'preorder': 'https://schema.org/PreOrder'
             }
-            offer['availability'] = availability_map.get(str(product_data['availability']).lower(), 'https://schema.org/InStock')
+            offer['availability'] = availability_map. get(str(product_data['availability']).lower(), 'https://schema.org/InStock')
         
         if 'link' in product_data and pd. notna(product_data['link']):
             offer['url'] = str(product_data['link'])
@@ -236,7 +236,7 @@ def scrape_website_products(url):
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # Try to extract schema. org data first
+        # Try to extract schema.org data first
         schema_scripts = soup.find_all('script', type='application/ld+json')
         products = []
         
@@ -278,7 +278,7 @@ def extract_product_from_schema(schema_data):
     
     mapping = {
         'name': 'title',
-        'description':  'description',
+        'description': 'description',
         'url': 'link',
         'image': 'image_link',
         'sku': 'id',
@@ -313,7 +313,7 @@ def extract_product_from_schema(schema_data):
                 currency = offers. get('priceCurrency', 'USD')
                 product['price'] = f"{offers['price']} {currency}"
             
-            if 'availability' in offers: 
+            if 'availability' in offers:
                 avail = offers['availability']. lower()
                 if 'instock' in avail:
                     product['availability'] = 'in_stock'
@@ -323,7 +323,7 @@ def extract_product_from_schema(schema_data):
                     product['availability'] = 'preorder'
     
     # Extract ratings
-    if 'aggregateRating' in schema_data:
+    if 'aggregateRating' in schema_data: 
         rating = schema_data['aggregateRating']
         if isinstance(rating, dict):
             product['product_review_rating'] = rating.get('ratingValue', '')
@@ -333,7 +333,7 @@ def extract_product_from_schema(schema_data):
 
 # Main App
 def main():
-    st.title("🛍️ ChatGPT Product Feed Validator & Schema Generator")
+    st.title("🛍�� ChatGPT Product Feed Validator & Schema Generator")
     st.markdown("---")
     
     # Sidebar
@@ -369,7 +369,7 @@ def main():
                 
                 # Display preview
                 with st.expander("📊 Data Preview"):
-                    st. dataframe(df.head(10))
+                    st.dataframe(df.head(10))
                 
                 process_product_feed(df, specs)
                 
@@ -400,11 +400,11 @@ def main():
                     else:
                         st.warning("No product data found on this page")
             else:
-                st.error("Please enter a valid URL")
+                st. error("Please enter a valid URL")
 
 def process_product_feed(df, specs):
     """Process and validate product feed"""
-    st.header("🔍 Validation Results")
+    st. header("🔍 Validation Results")
     
     # Run validation
     with st.spinner("Validating product feed..."):
@@ -431,7 +431,7 @@ def process_product_feed(df, specs):
     with col1:
         if results['missing_required_fields']: 
             st.error("❌ Missing Required Fields")
-            for field in results['missing_required_fields']: 
+            for field in results['missing_required_fields']:
                 st.write(f"- **{field}**: {specs[field]['description']}")
         else:
             st.success("✅ All required fields present")
@@ -502,7 +502,7 @@ def process_product_feed(df, specs):
         st.download_button(
             label="⬇️ Download Schema JSON",
             data=schema_json,
-            file_name=f"schema_{product_data. get('id', 'product')}.json",
+            file_name=f"schema_{product_data.get('id', 'product')}.json",
             mime="application/json"
         )
         
@@ -510,7 +510,7 @@ def process_product_feed(df, specs):
         st.subheader("✅ Schema Validation")
         missing_fields = []
         for field in ['name', 'image', 'description']: 
-            if field not in schema:
+            if field not in schema: 
                 missing_fields.append(field)
         
         if not missing_fields:
